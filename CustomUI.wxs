@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+	<Fragment>
+		<UI>
+			<Dialog Id="CustomUI" Width="370" Height="270" Title="[ProductName] - Hostname Entry">
+				<Control Id="HostLabel" Type="Text" X="48" Y="70" Width="100" Height="15" Text="Enter Hostname:" />
+				<Control Id="HostEdit" Type="Edit" X="150" Y="68" Width="160" Height="18" Property="HOSTNAME" Text="[HOSTNAME]" />
+
+				<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
+					<Publish Event="NewDialog" Value="WelcomeDlg">1</Publish>
+				</Control>
+				<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
+					<Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+				</Control>
+			</Dialog>
+		</UI>
+	</Fragment>
+
+</Wix>
+
