@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="SetupInstaller" Language="1033" Version="1.0.0.7" Manufacturer="bmc
+      " UpgradeCode="33603f66-c615-4745-9f88-2c1cdf7aea7a">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate />
+		<!-- UI setup -->
+		<UI Id="WixUI_InstallDir">
+			<TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+			<TextStyle Id="WixUI_Font_Bold" FaceName="Tahoma" Size="8" Bold="yes" />
+			<TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" Red="255" Green="255" Blue="255" />
+			<Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+			<Property Id="WixUI_Mode" Value="Minimal" />
+			<TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+
+			<!-- Standard Dialogs -->
+			<DialogRef Id="BrowseDlg" />
+			<DialogRef Id="DiskCostDlg" />
+			<DialogRef Id="ErrorDlg" />
+			<DialogRef Id="FatalError" />
+			<DialogRef Id="FilesInUse" />
+			<DialogRef Id="MsiRMFilesInUse" />
+			<DialogRef Id="PrepareDlg" />
+			<DialogRef Id="ProgressDlg" />
+			<DialogRef Id="ResumeDlg" />
+			<DialogRef Id="UserExit" />
+			<DialogRef Id="CustomUI" />
+
+			<!-- Navigation -->
+			<Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="CustomUI">NOT Installed</Publish>
+			<Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="CustomUI">Installed AND PATCH</Publish>
+			<Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg"><![CDATA[WixUI_InstallMode <> "Remove"]]></Publish>
+			<Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+		</UI>
+
+		<UIRef Id="WixUI_Common" />
+
+		<!-- Localization -->
+		<Property Id="WixUILocale" Value="en-us" />
+		<Property Id="HOSTNAME" Secure="yes" />
+
+		<Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+		<Feature Id="ProductFeature" Title="SetupInstaller" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+
+		<Property Id="INSTALLFOLDER" Value="D:\MyAppFolder\SetupInstaller"  />
+
+		<!-- Binary reference to custom action DLL -->
+		<Binary Id="CustomActionDll" SourceFile="D:\Users\aachaudh\source\repos\SetupInstaller\MyCustomActions\bin\Debug\MyCustomActions.CA.dll" />
+		<Binary Id="UninstallBatch" SourceFile="uninstall.bat" />
+
+
+		<!-- Custom Actions -->
+		<!-- Pass data into deferred custom action -->
+		<!-- immediate CA to set CustomActionData -->
+		<CustomAction Id="SetLaunchBatchData"
+					  Property="LaunchBatchWithHostname"
+					  Value="HOSTNAME=[HOSTNAME];INSTALLERDIR=[OriginalDatabase]"
+					  Execute="immediate"/>
+
+		<!-- deferred CA to run it -->
+		<CustomAction Id="LaunchBatchWithHostname"
+					  BinaryKey="CustomActionDll"
+					  DllEntry="LaunchBatchWithHostname"
+					  Execute="deferred"
+					  Return="check"
+					  Impersonate="no"/>
+
+
+		<CustomAction Id="LaunchUninstallBatch"
+		  BinaryKey="CustomActionDll"
+		  DllEntry="LaunchUninstallBatch"
+		  Execute="deferred"
+		  Return="check"
+		  Impersonate="no" />
+
+		<CustomAction Id="SetUninstallBatchData"
+					  Property="LaunchUninstallBatch"
+					  Value="INSTALLFOLDER=[OriginalDatabase]"
+					  Execute="immediate" />
+
+		<InstallExecuteSequence>
+			<!-- stash the properties immediately before files are copied down -->
+			<Custom Action="SetLaunchBatchData"
+					Before="InstallFiles">NOT Installed</Custom>
+
+			<!-- run the deferred CA only after InstallFiles has finished -->
+			<Custom Action="LaunchBatchWithHostname"
+					After="InstallFiles">NOT Installed</Custom>
+
+
+
+			<Custom Action="SetUninstallBatchData" Before="RemoveFiles">REMOVE="ALL"</Custom>
+			<Custom Action="LaunchUninstallBatch" After="RemoveFiles">REMOVE="ALL"</Custom>
+		</InstallExecuteSequence>
+
+
+	</Product>
+
+	<!--
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="SetupInstaller" />
+			</Directory>
+		</Directory>
+	</Fragment> -->
+
+
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="MyAppFolder" Name="MyAppFolder">
+				<Directory Id="INSTALLFOLDER" Name="SetupInstaller" />
+			</Directory>
+		</Directory>
+	</Fragment>
+			
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+			<!-- <Component Id="ProductComponent"> -->
+				<!-- TODO: Insert files, registry keys, and other resources here. -->
+			<!-- </Component> -->
+
+			<Component Id="RunBatchComponent" Guid="7DDA1902-631D-4A02-96C4-026715EE857C" >
+			
+				
+				<File Id="SetupBat" Source="install-connector-WinMsi.bat" KeyPath="yes"/>
+				<File Id="DevToolsZip" Name="BMC-DevTools.zip" Source="BMC-DevTools.zip" />
+			</Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>
